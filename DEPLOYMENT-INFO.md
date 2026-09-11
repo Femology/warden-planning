@@ -4,6 +4,46 @@ Single source of truth for every address, credential location, and env var this 
 has produced so far. Update this file whenever a new repo is created or a new
 environment is deployed — don't let this drift out of sync with reality.
 
+This file itself lives at https://github.com/Femology/warden-planning along with the
+master PRD and every phase build prompt — if you're picking this up from a different
+machine, clone that repo first and hand this file to a new Claude Code session before
+anything else.
+
+---
+
+## Resume here — UI work, step by step
+
+Where things actually stand on the UI complaint, plainly:
+
+**Done and verified (real tests, real builds, real running server — not just written):**
+- Freighter wallet connect works (`@creit.tech/stellar-wallets-kit`), passkey kept as a
+  secondary "beta" option so the demo doesn't block on it.
+- The font bug is fixed (was a WSL DNS problem, not a code bug) — Bricolage Grotesque
+  and Instrument Sans actually load now.
+- The chosen logo (colorful interlocking mark) exists in every required size/format and
+  is wired into the landing page header.
+- Six landing-page illustrations exist and three are wired in (`section-amount`,
+  `section-recipient`, `section-velocity`, plus the noise texture as a page overlay).
+- The wallet-connect modal is themed to match Warden's palette instead of the kit's
+  generic light-mode default.
+
+**Not done yet — this is the real next-session list, in order:**
+1. `/policy`, `/transfer`, `/velocity` still use the old plain layout — no shared app
+   shell (header/nav), none of the illustrations or logo wired in there yet.
+2. No real multi-page navigation between the app screens once connected.
+3. GSAP + Lenis motion not added yet — no page transitions, no scroll choreography.
+4. The Paper Shaders hero effect not added — the threshold band is still a plain CSS
+   drag slider, not the shader-driven version from the master brief.
+5. `hero-threshold-band-idle.svg`, `og-share-image.png`, and the `StepUpConfirmModal`
+   illustration (`stepup-moment.svg` etc. from `ASSET-BRIEF.md` section D) exist as
+   files but aren't wired in anywhere yet.
+6. `warden-monitor`'s dashboard hasn't had any of this pass applied.
+
+**To pick this back up:** open a Claude Code session in `warden-app` (or point it at
+this file first), say "continue the UI work from `DEPLOYMENT-INFO.md`," and go through
+the list above in order — each one is independently useful, so stopping partway through
+still leaves things better than before, same as this session did.
+
 ---
 
 ## Things only you can do, with exact steps
@@ -102,6 +142,7 @@ treat it as a real secret — don't reuse this exact key.
 | `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0). No public URL yet (issue #2) |
 | `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0). Not deployed yet (issues #2, #3) |
 | `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages). Every dev-guide example run against the live contract. Not yet connected to app.gitbook.com — no live URL yet |
+| `warden-planning` | https://github.com/Femology/warden-planning | This file, the master PRD, and every phase build prompt. Clone this first on a new machine. |
 
 All four repos now have: CI running the real test suite on every PR (verified against a
 real PR, not just YAML validity), branch protection on `main` (PR + 1 approval + passing

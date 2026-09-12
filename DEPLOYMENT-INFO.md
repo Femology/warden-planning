@@ -137,11 +137,11 @@ treat it as a real secret — don't reuse this exact key.
 
 | Repo | URL | Status |
 |---|---|---|
-| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet. CI + branch protection. [v0.1.0](https://github.com/Femology/warden-contract/releases/tag/v0.1.0) |
-| `warden-sdk` | https://github.com/Femology/warden-sdk | 34/34 tests. CI + branch protection. **Use tag `v0.1.3`** — v0.1.2 has a real submit* bug, see below; v0.1.0/v0.1.1 are stale build tags |
-| `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0). No public URL yet (issue #2) |
-| `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0). Not deployed yet (issues #2, #3) |
-| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages). Every dev-guide example run against the live contract. Not yet connected to app.gitbook.com — no live URL yet |
+| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet, Phase 14 (dual velocity windows, trust decay). CI + branch protection. 27/27 tests. [v0.2.0](https://github.com/Femology/warden-contract/releases/tag/v0.2.0) — v0.1.0 is the retired pre-Phase-14 deployment |
+| `warden-sdk` | https://github.com/Femology/warden-sdk | 36/36 tests. CI + branch protection. **Use tag `v0.2.1`** — v0.2.0 has two real bugs (wrong `trustedRecipients` decode, `getPolicy` crash instead of `null`), see below; v0.1.x are all pre-Phase-14 |
+| `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. On `warden-sdk` v0.2.1, contract redeployed. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0) (release not yet re-tagged for Phase 14). No public URL yet (issue #2) |
+| `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. On `warden-sdk` v0.2.1, contract redeployed. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0) (release not yet re-tagged for Phase 14). Not deployed yet (issues #2, #3) |
+| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages), updated for Phase 14. Every dev-guide example re-run against the redeployed live contract. Not yet connected to app.gitbook.com — no live URL yet |
 | `warden-planning` | https://github.com/Femology/warden-planning | This file, the master PRD, and every phase build prompt. Clone this first on a new machine. |
 
 All four repos now have: CI running the real test suite on every PR (verified against a
@@ -155,24 +155,41 @@ created via a committed `gh` script (`.github/scripts/create-issues.sh` in each 
 
 ## Testnet deployment (`warden-contract`)
 
+**Current, Phase 14** (dual velocity windows + trust decay — see below):
+
 ```bash
 WARDEN_NETWORK=testnet
 WARDEN_RPC_URL=https://soroban-testnet.stellar.org
 WARDEN_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-WARDEN_CONTRACT_ID=CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5
+WARDEN_CONTRACT_ID=CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF
 WARDEN_REFERENCE_ASSET=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-WARDEN_DEPLOY_LEDGER=4598184
-WARDEN_DEPLOY_TX_HASH=a508498a29318d06c08d4dd5e8f8e5d480ae2b95f507affac1bc521dafc81f77
+WARDEN_DEPLOY_LEDGER=4635844
 WARDEN_ADMIN_ADDRESS=GCZLMMKEOPOG5OB5QRLGH5ZKG7ACQNKX7KTT6UTXPFHUPS7FFSFFU5YM
 ```
 
-- **Contract explorer:** https://stellar.expert/explorer/testnet/contract/CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5
-- **`initialize` tx:** https://stellar.expert/explorer/testnet/tx/21d984c8473b0a67f80c12444446b53ca4dedefecfd8e594d3698c71b08b9bf6
-- **Deploy tx:** https://stellar.expert/explorer/testnet/tx/a508498a29318d06c08d4dd5e8f8e5d480ae2b95f507affac1bc521dafc81f77
-- **Wasm hash:** `70a7f7ec983eef92c6ba624ad08b2ed4256260ccc7242eb21b72bacc19d24324`
+- **Contract explorer:** https://stellar.expert/explorer/testnet/contract/CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF
+- **Deploy tx:** https://stellar.expert/explorer/testnet/tx/9efc5afb9fecf645396f9b7263f50f0e9b5bbd7035815229fa89ff7d3bc2a63a
+- **`initialize` tx:** https://stellar.expert/explorer/testnet/tx/d5282ecf4e3adeefba2c46dcd51657c4618bec8979f4196151f13c3b18acec35
+- **Wasm hash:** `07d6ce871e3cc78f79991ac4de61ae4b15b8e276dfcfdc4d43d2b587e6c90a2e`
 - **Reasoning for reference asset choice:** native XLM's SAC, not a custom test-USDC —
   `warden-contract` never reads this address after `initialize`, so it isn't
   load-bearing for v1. Full reasoning in `07-warden-phase8-deployment.md` Step 3.
+- **`warden-app`, `warden-monitor`, and `warden-docs` are all updated to this contract
+  ID.** `warden-sdk` is on `v0.2.1` everywhere (see the bugfix sections below).
+
+**Retired — do not use.** Pre-Phase-14 deployment, superseded by the above:
+
+```
+WARDEN_CONTRACT_ID=CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5
+```
+
+Explorer: https://stellar.expert/explorer/testnet/contract/CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5.
+Wasm hash `70a7f7ec983eef92c6ba624ad08b2ed4256260ccc7242eb21b72bacc19d24324`, deploy ledger
+`4598184`. Phase 14 changed `Policy`'s stored shape with no in-place migration path
+(see `warden-contract`'s README), so this is a genuinely different contract instance,
+not something the new one upgraded — its policy data (real test-wallet data from
+earlier sessions) is simply gone; every wallet re-set its policy from scratch against
+the new contract ID.
 
 ---
 
@@ -248,8 +265,35 @@ Local repo path: `~/projects/warden-contract` (WSL native filesystem, not `/mnt/
 network**, regardless of correct signing. All 34 mocked unit tests passed throughout —
 they mock the module boundary entirely and never exercise the real `.signed` check.
 Fixed in [warden-sdk#5](https://github.com/Femology/warden-sdk/pull/5), tagged
-`v0.1.3`. `warden-app` and `warden-monitor`'s dashboard are both bumped to it.
-**Use `v0.1.3`, not `v0.1.2`, for anything that actually submits a transaction.**
+`v0.1.3`. Superseded by `v0.2.x` below — this fix is carried forward, not undone.
+
+## `warden-sdk` v0.2.0 → v0.2.1 — two more real bugs, same discipline
+
+`v0.2.0` added the Phase 14 fields (hourly cap, trust decay, `Map`-shaped
+`trustedRecipients`) but was only checked against mocked unit tests before being
+pulled into `warden-app`/`warden-monitor`. Re-running `warden-docs`' examples against
+the redeployed contract — the same "every example gets run for real" discipline that
+caught the `v0.1.2` bug above — found two more, both fixed in `v0.2.1`
+([warden-sdk#7](https://github.com/Femology/warden-sdk/pull/7)):
+
+1. **`trustedRecipients` decoded with the wrong keys.** stellar-sdk decodes a Soroban
+   `Map<Address, u64>` as an array of `[key, value]` tuples, not a plain object (an
+   `Address` isn't a valid plain-object key). `v0.2.0`'s
+   `{ ...raw.trusted_recipients }` on that array silently produced
+   `{"0": [address, timestamp]}` — wrong shape *and* wrong content — instead of
+   throwing. Fixed with `Object.fromEntries(...)`.
+2. **`getPolicy` crashed instead of returning `null`** for a wallet with no policy
+   (verified live, against a brand-new funded Testnet wallet), and `getVelocity` had no
+   error handling at all. `.result` is a lazy getter — a reverted simulation throws
+   when it's *accessed*, not inside `build()`'s own try/catch, so the raw error never
+   reached `getPolicy`'s `instanceof WardenSdkError` check. Fixed with a shared
+   `unwrapSimulated()` helper.
+
+Both bugs passed every mocked unit test throughout, because the mocks modeled the
+*wrong* shape for both (a plain-object fixture, and a `mockBuild` that rejects
+synchronously instead of resolving with a throwing getter) — rewritten to match live
+behavior. **Use `v0.2.1`, not `v0.2.0`, for anything that reads a policy.**
+`warden-app` and `warden-monitor`'s dashboard are both bumped to it.
 
 ## `warden-docs` — documentation site
 
@@ -290,23 +334,24 @@ passing on real CI (verified, not just local `cargo test`):
 - **This is a breaking storage schema change with no upgrade path.** The full
   reasoning is in `warden-contract`'s own README under "Phase 14" / "Migration note."
 
-### This directly affects the live Testnet deployment
+### Redeployed — this section is now historical
 
-The contract ID in this file's "Testnet deployment" section above
-(`CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5`) is running the
-**pre-Phase-14 code** — it has real policy data under the old schema from earlier
-testing, and that data cannot be read by the new contract code (different struct
-shape). **This Phase 14 code has not been deployed anywhere yet.** Deploying it means
-a new contract ID, not an upgrade of the existing one, and re-running Phase 8's deploy
-steps (see `07-warden-phase8-deployment.md`) — including re-setting every wallet's
-policy from scratch under the new deployment. Until that redeploy happens, the live
-Testnet contract and the `main` branch of `warden-contract` are running different
-schemas — worth knowing before pointing `warden-sdk`/`warden-app` at either one.
+This used to warn that the live Testnet contract was still running pre-Phase-14 code
+while `main` had moved on. **That's resolved**: Phase 14 was deployed as a new contract
+instance (`CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF` — see the "Testnet
+deployment" section above), the one real test wallet's policy was re-set from scratch
+against it, and every downstream repo (`warden-sdk`, `warden-app`, `warden-monitor`,
+`warden-docs`) is updated to match — including two real bugs in `warden-sdk` v0.2.0
+found and fixed along the way (see the section above). The old contract ID
+(`CBFQ752...`) is retired and its policy data is gone, exactly as this section
+originally warned would happen.
 
 ## Open items / blockers
 
-- **`warden-contract`'s Phase 14 code needs a fresh Testnet deployment** (new contract
-  ID — see above) before anything downstream can use the hourly window or trust decay.
+- **`warden-app` and `warden-monitor` haven't had their GitHub Releases re-tagged for
+  Phase 14** — they're on `warden-sdk` v0.2.1 and the new contract ID in code and on
+  `main`, but the `v0.1.0` release tag on each still reflects the pre-Phase-14 state.
+  Minor, cosmetic, not blocking anything functional.
 - **`warden-app` has no public URL yet** (issue
   [#2](https://github.com/Femology/warden-app/issues/2)) — same for `warden-monitor`'s
   indexer and dashboard (issues

@@ -13,36 +13,57 @@ anything else.
 
 ## Resume here — UI work, step by step
 
-Where things actually stand on the UI complaint, plainly:
+**This section now describes Design System v2** (`13-warden-design-system-v2.md`, this
+repo) — the palette pivoted from v1's blue-ink base to a forest-black one, a deliberate
+re-skin, not an incremental edit. Anything below dated before this note describing v1
+colors is historical.
 
-**Done and verified (real tests, real builds, real running server — not just written):**
+**Done and verified (real tests, real builds, real production build, checked in an
+actual browser against the running dev server — not just written):**
+- **Step 1 of the v2 redesign shipped in `warden-app`**: the full v2 token set (dark +
+  light, see `13-warden-design-system-v2.md` §2) wired into `globals.css` with a
+  runtime-switchable `[data-theme]` mechanism (system preference by default, an
+  explicit toggle persisted to `localStorage`, a blocking inline script in
+  `layout.tsx` so there's no flash of the wrong theme on load). Fonts (Bricolage
+  Grotesque / Instrument Sans / JetBrains Mono) unchanged and confirmed still correct.
+  A new persistent, glassmorphism `SiteHeader` (logo mark + wordmark, four marketing
+  nav links, theme toggle, a compact Freighter-only connect button) now renders from
+  the root layout on every route.
 - Freighter wallet connect works (`@creit.tech/stellar-wallets-kit`), passkey kept as a
-  secondary "beta" option so the demo doesn't block on it.
-- The font bug is fixed (was a WSL DNS problem, not a code bug) — Bricolage Grotesque
-  and Instrument Sans actually load now.
-- The chosen logo (colorful interlocking mark) exists in every required size/format and
-  is wired into the landing page header.
-- Six landing-page illustrations exist and three are wired in (`section-amount`,
-  `section-recipient`, `section-velocity`, plus the noise texture as a page overlay).
-- The wallet-connect modal is themed to match Warden's palette instead of the kit's
-  generic light-mode default.
+  secondary "beta" option (`ConnectWallet.tsx`, currently unused by any page since the
+  new header uses its own compact `HeaderConnectButton` instead — still there for
+  whatever dedicated connect surface wants the fuller passkey flow).
+- Phase 18's "Explain this" feature is fully built (see its own section below) and
+  already themed correctly under v2 — `StepUpConfirmModal` and `warden-monitor`'s
+  `WalletDrilldown` both render it.
 
-**Not done yet — this is the real next-session list, in order:**
-1. `/policy`, `/transfer`, `/velocity` still use the old plain layout — no shared app
-   shell (header/nav), none of the illustrations or logo wired in there yet.
-2. No real multi-page navigation between the app screens once connected.
-3. GSAP + Lenis motion not added yet — no page transitions, no scroll choreography.
-4. The Paper Shaders hero effect not added — the threshold band is still a plain CSS
-   drag slider, not the shader-driven version from the master brief.
-5. `hero-threshold-band-idle.svg`, `og-share-image.png`, and the `StepUpConfirmModal`
-   illustration (`stepup-moment.svg` etc. from `ASSET-BRIEF.md` section D) exist as
-   files but aren't wired in anywhere yet.
-6. `warden-monitor`'s dashboard hasn't had any of this pass applied.
+**Not done yet — the real next-session list, per the design system's own recommended
+build order (§ "Full sitemap" / the doc's own "recommended build order" note):**
+1. **The four marketing nav links 404.** `/how-it-works`, `/security`, `/developers`,
+   `/protocol` don't exist yet — the header links to their real eventual routes on
+   purpose (not a placeholder href), but none of those pages are built.
+2. **The landing page itself is still the old v1 single-section demo** (the drag-slider
+   hero + three-signals grid), just re-skinned in v2 colors — not yet the full spec
+   from `13-warden-design-system-v2.md` §5 (the Interactive Sandbox Terminal with
+   1-click stories, the $12-coffee-vs-$5,000-drain comparison, the 5-state security
+   model visual, the open-source repo carousel).
+3. **The v1 illustrations/logo need a real re-skin check, not just left as-is.** They
+   were hand-colored for v1's palette (jade/amber/purple on blue-ink) — confirm they
+   still read correctly against the new forest-black base before assuming they do.
+4. `/policy`, `/transfer`, `/velocity` still use the old plain layout (now under the
+   new persistent header, but no other v2 treatment) — and per the new sitemap these
+   should eventually move under `/app/...` (e.g. `/app/policy`), not stay at root;
+   that's a real routing decision to make deliberately, not drift into.
+5. No guardian/recovery, flagged-address, or account-state UI anywhere yet — the SDK
+   supports all of it (v0.3.0+), nothing in either app's UI calls any of it.
+6. GSAP + Lenis motion, the Paper Shaders hero effect, and `warden-monitor`'s dashboard
+   getting any of this pass at all are all still fully unstarted.
 
-**To pick this back up:** open a Claude Code session in `warden-app` (or point it at
-this file first), say "continue the UI work from `DEPLOYMENT-INFO.md`," and go through
-the list above in order — each one is independently useful, so stopping partway through
-still leaves things better than before, same as this session did.
+**To pick this back up:** open a Claude Code session pointed at this file, say
+"continue the v2 UI work from `DEPLOYMENT-INFO.md`," and go through the list above in
+order. The user is currently doing hands-on design work in Antigravity — check with
+them before starting new UI code, since work may already be in progress there that
+hasn't been pushed yet.
 
 ---
 
@@ -137,12 +158,21 @@ treat it as a real secret — don't reuse this exact key.
 
 | Repo | URL | Status |
 |---|---|---|
-| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet, Phases 14+15+16 (dual velocity/trust decay, flagged-address registry, guardian recovery). CI + branch protection. 58/58 tests. [v0.3.0](https://github.com/Femology/warden-contract/releases/tag/v0.3.0) — v0.2.0/v0.1.0 are retired earlier deployments |
-| `warden-sdk` | https://github.com/Femology/warden-sdk | 52/52 tests. CI + branch protection. **Use tag `v0.3.0`** — adds Phase 15/16 support plus a real fail-fast bugfix (see below); earlier tags are all pre-Phase-15/16 or have known bugs |
-| `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. On `warden-sdk` v0.3.0, contract redeployed. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0) (release not yet re-tagged). No public URL yet (issue #2) |
-| `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. On `warden-sdk` v0.3.0, contract redeployed. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0) (release not yet re-tagged). Not deployed yet (issues #2, #3) |
-| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages), updated for Phase 14. **Not yet updated for Phase 15/16** — flagged below as an open item. Not yet connected to app.gitbook.com — no live URL yet |
+| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet, Phases 14+15+16 (dual velocity/trust decay, flagged-address registry, guardian recovery). CI + branch protection. 58/58 tests. [v0.3.0](https://github.com/Femology/warden-contract/releases/tag/v0.3.0). `WARDEN-PROTOCOL.md` (protocol v1.0.0) + `CHANGELOG.md` + a protocol-rule-change issue template now govern any future change to a state transition or step-up reason — v0.2.0/v0.1.0 are retired earlier deployments |
+| `warden-sdk` | https://github.com/Femology/warden-sdk | 73/73 tests. CI + branch protection. **Use tag `v0.4.0`** — adds the Phase 18 explain module (`buildExplainPrompt`/`validateExplanationResponse`/`fallbackExplanation`) and fixes `AccountState`/`GuardianConfig`/`RecoveryProposal` never being exported from the package's own entry point; earlier tags are pre-Phase-18 or have known bugs (see the version-history sections below) |
+| `warden-app` | https://github.com/Femology/warden-app | 24/24 tests. CI + branch protection. On `warden-sdk` v0.4.0. Phase 18 "Explain this" live in `StepUpConfirmModal`. Design System v2 Step 1 shipped (tokens, fonts, persistent nav shell — see "Resume here" above). [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0) (release not yet re-tagged). No public URL yet (issue #2) |
+| `warden-monitor` | https://github.com/Femology/warden-monitor | 30/30 tests (indexer+dashboard). CI + branch protection. On `warden-sdk` v0.4.0. Phase 18 "Explain this" live in `WalletDrilldown`. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0) (release not yet re-tagged). Not deployed yet (issues #2, #3) |
+| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages), caught up through Phase 18 — contract ID, SDK version, and the evaluate() decision order all current; Phase 15/16's full reference now points to `WARDEN-PROTOCOL.md` rather than duplicating it. Not yet connected to app.gitbook.com — no live URL yet |
 | `warden-planning` | https://github.com/Femology/warden-planning | This file, the master PRD, and every phase build prompt. Clone this first on a new machine. |
+
+**All five repos are also cloned locally, right next to this file**, at
+`warden-contract/`, `warden-sdk/`, `warden-app/`, `warden-monitor/`, `warden-docs/`
+(siblings of this `DEPLOYMENT-INFO.md`, inside the `warden-planning` checkout) — a
+plain read-only `git clone`, not the WSL working copies these were actually built in.
+Useful for anything that wants direct filesystem access on the Windows side (an IDE,
+Antigravity, etc.) without needing WSL. These will drift from `main` the moment new
+work lands anywhere — `git pull` each one before trusting it's current, the same as
+you'd treat any other clone.
 
 All four repos now have: CI running the real test suite on every PR (verified against a
 real PR, not just YAML validity), branch protection on `main` (PR + 1 approval + passing
@@ -374,6 +404,63 @@ redeployed contract, not by trusting the mocks
 
 `warden-app` and `warden-monitor`'s dashboard are both bumped to `v0.3.0`.
 
+## `warden-contract` — WARDEN-PROTOCOL.md and the governance process (Phase 19)
+
+A language-neutral spec of the protocol's rules, independent of Rust/Soroban/this
+repo's source — `WARDEN-PROTOCOL.md` at the contract repo's root, versioned separately
+(currently **1.0.0**) from the repo's own release tags via `CHANGELOG.md`. Covers every
+data type, the exact `evaluate()` decision order, the account state diagram and every
+legal transition, the flagged-address registry, the guardian/recovery subsystem, the
+full event/error tables as stable consumer-facing interfaces, and an explicit
+statement that Phase 17's signed-attestation schema doesn't exist because Phase 17
+isn't active (rather than leaving that gap to be inferred from silence).
+
+Caught one real mistake before it shipped: the first draft of the state-transition
+diagram had several arrows backwards, pointing from `Normal` toward more restrictive
+states — re-derived from the actual `AccountState` ordering and the `propose_recovery`
+check rather than trusted on the first pass, and fixed all 10 legal transitions before
+committing.
+
+Any future change to what triggers a state transition or a step-up reason now
+requires opening an issue via `.github/ISSUE_TEMPLATE/protocol-rule-change.md`
+(three required fields: what changes, why, what it affects), acknowledged by a
+maintainer, before any code is written — `CONTRIBUTING.md` and the README both point
+to this now.
+
+## Phase 18 — "Explain this" (Evomap / DeepSeek V4.1 Flash)
+
+An "Explain this" action next to any step-up event in both `warden-app`
+(`StepUpConfirmModal`) and `warden-monitor` (`WalletDrilldown`'s evaluation list).
+Calls an LLM with **only** the structured on-chain facts for that one event (a
+step-up's reason code and amount; the shared module also supports a state-transition
+shape for whenever that gets a UI surface) — no wallet address, no history, no ability
+to call any Warden function or change anything. The model's output is validated
+against a fixed schema (`summary`, `factors`, `next_steps`) before ever being shown;
+any deviation, including the model referencing a reason code that wasn't in the input,
+discards the output and falls back to pre-written copy instead.
+
+- Shared, secret-free schema/validation/fallback logic lives in `warden-sdk`
+  (`buildExplainPrompt`, `validateExplanationResponse`, `fallbackExplanation`) —
+  provider-agnostic, safe to import anywhere including client-side code.
+- The actual model call (`https://api.evomap.ai/v1/chat/completions`, model
+  `evomap-deepseek-v4-flash`) lives entirely in each app's own server-only
+  `/api/explain` route, which is the only place `EVOMAP_API_KEY` is ever read. Kept
+  deliberately out of `warden-sdk` itself, since that package is also imported by
+  browser code and a key must never end up reachable there by accident.
+- **The API key shared in this session's chat is exposed by definition and was never
+  written to any file, prompt, or commit.** Both apps' `.env.local` have
+  `EVOMAP_API_KEY=` left blank with a comment pointing at this. The feature works
+  correctly either way (always falls back to pre-written explanations when the key is
+  absent) — it just doesn't call the real model until the key is rotated on Evomap's
+  dashboard and the **new** key is pasted in directly, never through chat again.
+- Tests (10 per app, identical coverage) call each `/api/explain` route handler
+  directly with a mocked Evomap response, covering exactly what was required
+  explicitly: a fabricated/malformed model response falls back correctly, and a
+  response referencing an ungrounded reason code is discarded rather than rendered.
+- See `HOSTING.md` (`warden-monitor`) and both apps' READMEs for exactly which
+  Vercel-hosted piece needs its own copy of `EVOMAP_API_KEY` — setting it on one does
+  not cover the other, each has its own separate route.
+
 ## `warden-docs` — documentation site
 
 | | |
@@ -427,24 +514,36 @@ originally warned would happen.
 
 ## Open items / blockers
 
-- **`warden-docs` has not been updated for Phase 15/16 yet.** It still documents the
-  Phase-14-only contract ID and shape — the flagged-address registry and guardian
-  recovery subsystem aren't mentioned anywhere in it. Same "every example gets run for
-  real" discipline should apply when this happens.
-- **`warden-app`/`warden-monitor` haven't wired up any UI for Phase 15/16 either.**
-  The SDK supports flagging addresses and guardian recovery end-to-end; nothing in
-  either app's UI calls any of it yet. `warden-monitor`'s `WalletDrilldown` in
-  particular could show flagged status, guardian config, and a pending recovery
-  proposal, but doesn't.
+- **`EVOMAP_API_KEY` needs to be rotated before Phase 18 actually calls the real
+  model anywhere.** The key shared in this session's chat is exposed by definition and
+  was deliberately never written to any file — rotate it on Evomap's dashboard, then
+  paste the new key directly into each app's own local `.env.local` (never into chat)
+  and into each Vercel project's env vars. Until then, "Explain this" works correctly
+  and safely, it just always shows the pre-written fallback copy, never the model's.
+- **`warden-app`/`warden-monitor` still have no UI for Phase 15/16's data**, even
+  though the SDK supports it end-to-end. `warden-monitor`'s `WalletDrilldown` could
+  show flagged status, guardian config, and a pending recovery proposal, but doesn't.
+  No page anywhere lists guardian-recovery or flagged-address *events* either — the
+  indexer doesn't decode `guardians_set`/`recovery_*`/`address_flagged` yet, so there's
+  nothing to list even if a page existed.
+- **The Design System v2 UI redesign is mid-flight** — Step 1 (tokens, fonts, the
+  persistent nav shell) shipped in `warden-app`; everything else in "Resume here"
+  above is still open, including `warden-monitor`'s dashboard not having had any v2
+  pass applied at all. The user is doing hands-on design work in Antigravity right
+  now — check for in-progress, possibly-unpushed changes before touching UI code
+  again.
 - **`warden-app` and `warden-monitor` haven't had their GitHub Releases re-tagged**
-  since Phase 14 — they're on `warden-sdk` v0.3.0 and the current contract ID in code
+  since Phase 14 — they're on `warden-sdk` v0.4.0 and the current contract ID in code
   and on `main`, but the `v0.1.0` release tag on each still reflects the original
   pre-Phase-14 state. Minor, cosmetic, not blocking anything functional.
 - **`warden-app` has no public URL yet** (issue
   [#2](https://github.com/Femology/warden-app/issues/2)) — same for `warden-monitor`'s
   indexer and dashboard (issues
   [#2](https://github.com/Femology/warden-monitor/issues/2) and
-  [#3](https://github.com/Femology/warden-monitor/issues/3)).
-- **`warden-docs` isn't connected to GitBook yet** — the repo is real and complete;
-  publishing it live is a one-time manual step at app.gitbook.com (needs your account,
-  not something this session can do on your behalf).
+  [#3](https://github.com/Femology/warden-monitor/issues/3)). `HOSTING.md` and both
+  apps' READMEs are ready with the exact env vars each platform needs, `EVOMAP_API_KEY`
+  included, whenever this actually happens.
+- **`warden-docs` isn't connected to GitBook yet** — the repo is real, complete, and
+  caught up through Phase 18; publishing it live is a one-time manual step at
+  app.gitbook.com (needs your account, not something this session can do on your
+  behalf).

@@ -271,8 +271,42 @@ deployment).
 Every code example in `developer-guide.md` was actually run against the live deployed
 contract while writing it — that's how the `warden-sdk` bug above was found.
 
+## `warden-contract` Phase 14 — dual velocity windows + trust decay
+
+From `11-warden-feature-roadmap-phases-14-19.md` (this repo). Six commits, 27/27 tests
+passing on real CI (verified, not just local `cargo test`):
+
+- **Hourly velocity window** (`hourly_velocity_cap`, resets every 3600s) alongside the
+  existing daily one. `evaluate()` checks both; `StepUpReason::HourlyVelocityExceeded`
+  is new. `hourly_velocity_cap` must be `<= daily_velocity_cap` (`InvalidPolicyParams`
+  otherwise) — a design decision made and documented in the code, not explicitly
+  spelled out in the task text, since the feature's own stated rationale ("catches
+  rapid-fire spending a single daily cap misses") only makes sense with an
+  independently-meaningful (typically smaller) hourly threshold.
+- **Trust decay.** `trusted_recipients` changed from `Vec<Address>` to
+  `Map<Address, u64>` (`last_paid_at`), justified in a code comment. A new
+  `trust_decay_seconds` policy field controls how long trust survives without a
+  payment. `set_policy` now takes 6 params, not 4.
+- **This is a breaking storage schema change with no upgrade path.** The full
+  reasoning is in `warden-contract`'s own README under "Phase 14" / "Migration note."
+
+### This directly affects the live Testnet deployment
+
+The contract ID in this file's "Testnet deployment" section above
+(`CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5`) is running the
+**pre-Phase-14 code** — it has real policy data under the old schema from earlier
+testing, and that data cannot be read by the new contract code (different struct
+shape). **This Phase 14 code has not been deployed anywhere yet.** Deploying it means
+a new contract ID, not an upgrade of the existing one, and re-running Phase 8's deploy
+steps (see `07-warden-phase8-deployment.md`) — including re-setting every wallet's
+policy from scratch under the new deployment. Until that redeploy happens, the live
+Testnet contract and the `main` branch of `warden-contract` are running different
+schemas — worth knowing before pointing `warden-sdk`/`warden-app` at either one.
+
 ## Open items / blockers
 
+- **`warden-contract`'s Phase 14 code needs a fresh Testnet deployment** (new contract
+  ID — see above) before anything downstream can use the hourly window or trust decay.
 - **`warden-app` has no public URL yet** (issue
   [#2](https://github.com/Femology/warden-app/issues/2)) — same for `warden-monitor`'s
   indexer and dashboard (issues

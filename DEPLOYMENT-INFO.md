@@ -137,11 +137,11 @@ treat it as a real secret — don't reuse this exact key.
 
 | Repo | URL | Status |
 |---|---|---|
-| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet, Phase 14 (dual velocity windows, trust decay). CI + branch protection. 27/27 tests. [v0.2.0](https://github.com/Femology/warden-contract/releases/tag/v0.2.0) — v0.1.0 is the retired pre-Phase-14 deployment |
-| `warden-sdk` | https://github.com/Femology/warden-sdk | 36/36 tests. CI + branch protection. **Use tag `v0.2.1`** — v0.2.0 has two real bugs (wrong `trustedRecipients` decode, `getPolicy` crash instead of `null`), see below; v0.1.x are all pre-Phase-14 |
-| `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. On `warden-sdk` v0.2.1, contract redeployed. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0) (release not yet re-tagged for Phase 14). No public URL yet (issue #2) |
-| `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. On `warden-sdk` v0.2.1, contract redeployed. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0) (release not yet re-tagged for Phase 14). Not deployed yet (issues #2, #3) |
-| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages), updated for Phase 14. Every dev-guide example re-run against the redeployed live contract. Not yet connected to app.gitbook.com — no live URL yet |
+| `warden-contract` | https://github.com/Femology/warden-contract | Deployed to Testnet, Phases 14+15+16 (dual velocity/trust decay, flagged-address registry, guardian recovery). CI + branch protection. 58/58 tests. [v0.3.0](https://github.com/Femology/warden-contract/releases/tag/v0.3.0) — v0.2.0/v0.1.0 are retired earlier deployments |
+| `warden-sdk` | https://github.com/Femology/warden-sdk | 52/52 tests. CI + branch protection. **Use tag `v0.3.0`** — adds Phase 15/16 support plus a real fail-fast bugfix (see below); earlier tags are all pre-Phase-15/16 or have known bugs |
+| `warden-app` | https://github.com/Femology/warden-app | 14/14 tests. CI + branch protection. On `warden-sdk` v0.3.0, contract redeployed. [v0.1.0](https://github.com/Femology/warden-app/releases/tag/v0.1.0) (release not yet re-tagged). No public URL yet (issue #2) |
+| `warden-monitor` | https://github.com/Femology/warden-monitor | 20/20 tests (indexer+dashboard). CI + branch protection. On `warden-sdk` v0.3.0, contract redeployed. [v0.1.0](https://github.com/Femology/warden-monitor/releases/tag/v0.1.0) (release not yet re-tagged). Not deployed yet (issues #2, #3) |
+| `warden-docs` | https://github.com/Femology/warden-docs | Complete GitBook site (6 pages), updated for Phase 14. **Not yet updated for Phase 15/16** — flagged below as an open item. Not yet connected to app.gitbook.com — no live URL yet |
 | `warden-planning` | https://github.com/Femology/warden-planning | This file, the master PRD, and every phase build prompt. Clone this first on a new machine. |
 
 All four repos now have: CI running the real test suite on every PR (verified against a
@@ -155,41 +155,50 @@ created via a committed `gh` script (`.github/scripts/create-issues.sh` in each 
 
 ## Testnet deployment (`warden-contract`)
 
-**Current, Phase 14** (dual velocity windows + trust decay — see below):
+**Current — Phases 14+15+16, batch-deployed together** (dual velocity windows, trust
+decay, flagged-address registry, guardian recovery — see the phase sections below):
 
 ```bash
 WARDEN_NETWORK=testnet
 WARDEN_RPC_URL=https://soroban-testnet.stellar.org
 WARDEN_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-WARDEN_CONTRACT_ID=CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF
+WARDEN_CONTRACT_ID=CD5QU2E6LOKFAZFESIZSAA4IENH5SZHJVU4Y6532WNZSXPZDYRKEEVUW
 WARDEN_REFERENCE_ASSET=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-WARDEN_DEPLOY_LEDGER=4635844
+WARDEN_DEPLOY_LEDGER=4637276
 WARDEN_ADMIN_ADDRESS=GCZLMMKEOPOG5OB5QRLGH5ZKG7ACQNKX7KTT6UTXPFHUPS7FFSFFU5YM
 ```
 
-- **Contract explorer:** https://stellar.expert/explorer/testnet/contract/CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF
-- **Deploy tx:** https://stellar.expert/explorer/testnet/tx/9efc5afb9fecf645396f9b7263f50f0e9b5bbd7035815229fa89ff7d3bc2a63a
-- **`initialize` tx:** https://stellar.expert/explorer/testnet/tx/d5282ecf4e3adeefba2c46dcd51657c4618bec8979f4196151f13c3b18acec35
-- **Wasm hash:** `07d6ce871e3cc78f79991ac4de61ae4b15b8e276dfcfdc4d43d2b587e6c90a2e`
+- **Contract explorer:** https://stellar.expert/explorer/testnet/contract/CD5QU2E6LOKFAZFESIZSAA4IENH5SZHJVU4Y6532WNZSXPZDYRKEEVUW
+- **Wasm hash:** `6a5f341679e33bb7e37f6cd32312f6cb0a05be97bcc3925f7671dad8784c78d6`
 - **Reasoning for reference asset choice:** native XLM's SAC, not a custom test-USDC —
   `warden-contract` never reads this address after `initialize`, so it isn't
   load-bearing for v1. Full reasoning in `07-warden-phase8-deployment.md` Step 3.
-- **`warden-app`, `warden-monitor`, and `warden-docs` are all updated to this contract
-  ID.** `warden-sdk` is on `v0.2.1` everywhere (see the bugfix sections below).
+- **Why a redeploy for an additive change:** Phase 15 and 16 both added independent
+  storage keys without touching `Policy`'s shape at all — unlike Phase 14, this wasn't
+  a storage-compatibility break. It happened anyway because this contract has no
+  admin-upgrade function by design, so any new function can only ever ship as a new
+  contract instance.
+- **Verified live, not just simulated locally**, immediately after deploying: `get_policy`
+  null before / configured after `set_policy`+`add_trusted_recipient`, `evaluate()`
+  `Allow` for a normal transfer, `RequireStepUp(FlaggedRecipient)` right after
+  `add_flagged_address` on that same recipient and back to `Allow` after
+  `remove_flagged_address`, `get_account_state` returning `Normal` and `get_guardians`
+  correctly erroring `GuardiansNotConfigured` for a never-configured wallet.
+- **`warden-app` and `warden-monitor` are both updated to this contract ID and to
+  `warden-sdk` v0.3.0.** `warden-docs` is **not yet updated** — see Open items below.
 
-**Retired — do not use.** Pre-Phase-14 deployment, superseded by the above:
+**Retired — do not use.** Two earlier deployments, both superseded by the above:
 
-```
-WARDEN_CONTRACT_ID=CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5
-```
+| | |
+|---|---|
+| Phase 14 only | `CD25U7GYDNB7XUBEEN3OKZK2LY62ANSUJJPQ6SF2Y6DHQ5SQ3F7LSVUF` — no flagged-address registry or guardian/recovery functions |
+| Pre-Phase-14 | `CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5` — old `Policy` shape entirely |
 
-Explorer: https://stellar.expert/explorer/testnet/contract/CBFQ752LFNC57U4KWDAEKNU43PLBWJ7M2B4ZRYUMCWL62JHJNUYJVMB5.
-Wasm hash `70a7f7ec983eef92c6ba624ad08b2ed4256260ccc7242eb21b72bacc19d24324`, deploy ledger
-`4598184`. Phase 14 changed `Policy`'s stored shape with no in-place migration path
-(see `warden-contract`'s README), so this is a genuinely different contract instance,
-not something the new one upgraded — its policy data (real test-wallet data from
-earlier sessions) is simply gone; every wallet re-set its policy from scratch against
-the new contract ID.
+Same pattern each time: this contract has no in-place migration path (no
+admin-upgrade function, by design), so every redeploy means a new contract ID and the
+one real Testnet wallet re-running `set_policy`/`add_trusted_recipient` from scratch.
+Acceptable for Testnet with no real funds at stake; would not be acceptable for a
+Mainnet deployment with real user data.
 
 ---
 
@@ -295,6 +304,76 @@ synchronously instead of resolving with a throwing getter) — rewritten to matc
 behavior. **Use `v0.2.1`, not `v0.2.0`, for anything that reads a policy.**
 `warden-app` and `warden-monitor`'s dashboard are both bumped to it.
 
+## `warden-contract` Phase 15 — flagged-address registry
+
+`add_flagged_address`/`remove_flagged_address`, admin-gated: the caller must both sign
+*and* be the exact address stored at `initialize` (`admin.require_auth()` alone only
+proves identity, not privilege). `evaluate()` checks the recipient against this
+registry before any policy-dependent check — a flagged recipient always gets
+`RequireStepUp(FlaggedRecipient)`, regardless of amount, trust, or velocity headroom.
+Starts empty in v1, no external feed wired up — stated plainly in the contract's own
+README, and explicitly **not** an AI system anywhere in this stack.
+
+## `warden-contract` Phase 16 — guardian and recovery subsystem
+
+`set_guardians`, `propose_recovery`, `approve_recovery`, `execute_recovery`,
+`cancel_recovery`. A wallet owner names up to 7 guardians who can, past a threshold and
+a 48-hour timelock, move the account back toward normal operation without the owner's
+own signature — `execute_recovery` has no `require_auth` call on any address at all,
+which was verified two ways: a unit test that deliberately sabotaged the function with
+an added auth check and confirmed the test failed before reverting, and a live call
+submitted by a funded Testnet account with zero relationship to the target wallet,
+which succeeded (rejected only for the correct business reason, `GuardiansNotConfigured`,
+never for an auth reason). Guardians can never touch `Policy` or `trusted_recipients` —
+verified: no guardian function calls the storage layer's `write_policy`.
+
+**Three getters added after the fact:** `get_account_state`, `get_guardians`,
+`get_recovery_proposal`. The original Phase 16 spec listed five state-changing
+functions and zero reads, which would have left every downstream repo with no way to
+read this data via a contract call at all — the same `get_policy`/`get_velocity`
+pattern, applied here once the gap was noticed.
+
+**Nothing escalates `AccountState` yet.** This phase only builds the
+recovery-downward half of the state machine; automatic escalation is Phase 17's job
+(an oracle layer, explicitly conditional on confirming a real third-party API vs.
+building one from scratch — not started).
+
+## `warden-contract` v0.3.0 — Phases 15+16, batch-deployed together
+
+Not a storage-shape break like Phase 14 — Phase 15 and 16 both added independent
+storage keys without touching `Policy` at all. Redeployed anyway because this contract
+has no admin-upgrade function by design: any new function can only ever ship as a new
+contract instance. See the "Testnet deployment" section above for the live
+verification performed immediately after deploying.
+
+## `warden-sdk` v0.3.0 — Phase 15/16 support, plus a real bug affecting every write call
+
+Adds `build*`/`submit*` pairs for every Phase 15/16 function and the three new
+getters. Two things found by actually exercising the new methods against the live
+redeployed contract, not by trusting the mocks
+([warden-sdk#8](https://github.com/Femology/warden-sdk/pull/8)):
+
+1. **`AccountState` is fieldless in the contract but still wire-encoded as a tagged
+   union** (`{ tag: "Normal" }`), not a bare string — assumed otherwise at first (a
+   CLI's own pretty-printing was misleading). Broke in both directions: encoding a
+   plain string into `propose_recovery`'s `target_state` argument threw "no such enum
+   entry: undefined," and `get_account_state`'s real raw result is `{ tag: "Normal" }`,
+   not `"Normal"`. Fixed by wrapping/unwrapping at the client boundary; every public
+   method still takes/returns a plain string.
+2. **A real bug in the shared `build()` helper, affecting every `build*` method, old
+   and new** — it never checked for a reverted simulation before handing back signable
+   XDR. A doomed write call (found via `buildProposeRecovery` with an invalid target
+   state) still produced XDR that signed and submitted fine, then failed at the
+   network with a bare `tx_malformed` instead of the specific `WardenError` the
+   simulation already knew about. This retroactively explains an unresolved
+   `tx_malformed` seen earlier this session against `add_trusted_recipient` on an
+   already-trusted recipient — dismissed at the time as a one-off rather than chased
+   to a cause; it wasn't a one-off. Fixed by having `build()` itself check `.result`
+   (reusing the existing `unwrapSimulated()` helper) before returning, so every
+   `build*` method now fails fast with a clean `WardenSdkError`.
+
+`warden-app` and `warden-monitor`'s dashboard are both bumped to `v0.3.0`.
+
 ## `warden-docs` — documentation site
 
 | | |
@@ -348,10 +427,19 @@ originally warned would happen.
 
 ## Open items / blockers
 
-- **`warden-app` and `warden-monitor` haven't had their GitHub Releases re-tagged for
-  Phase 14** — they're on `warden-sdk` v0.2.1 and the new contract ID in code and on
-  `main`, but the `v0.1.0` release tag on each still reflects the pre-Phase-14 state.
-  Minor, cosmetic, not blocking anything functional.
+- **`warden-docs` has not been updated for Phase 15/16 yet.** It still documents the
+  Phase-14-only contract ID and shape — the flagged-address registry and guardian
+  recovery subsystem aren't mentioned anywhere in it. Same "every example gets run for
+  real" discipline should apply when this happens.
+- **`warden-app`/`warden-monitor` haven't wired up any UI for Phase 15/16 either.**
+  The SDK supports flagging addresses and guardian recovery end-to-end; nothing in
+  either app's UI calls any of it yet. `warden-monitor`'s `WalletDrilldown` in
+  particular could show flagged status, guardian config, and a pending recovery
+  proposal, but doesn't.
+- **`warden-app` and `warden-monitor` haven't had their GitHub Releases re-tagged**
+  since Phase 14 — they're on `warden-sdk` v0.3.0 and the current contract ID in code
+  and on `main`, but the `v0.1.0` release tag on each still reflects the original
+  pre-Phase-14 state. Minor, cosmetic, not blocking anything functional.
 - **`warden-app` has no public URL yet** (issue
   [#2](https://github.com/Femology/warden-app/issues/2)) — same for `warden-monitor`'s
   indexer and dashboard (issues

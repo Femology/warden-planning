@@ -1,0 +1,7 @@
+warden-app/
+warden-contract/
+warden-docs/
+warden-monitor/
+warden-sdk/
+.claude/
+daily_velocity_cap
